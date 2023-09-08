@@ -21,7 +21,10 @@ var KEY = ""
 
 //export csAuthCb
 func csAuthCb(pCtx *C.void, zStorage *C.char, zAccount *C.char, zContainer *C.char, pzAuthToken **C.char) C.int {
-	*pzAuthToken = C.sqlite3mprintf(C.CString(KEY))
+	cKey := C.CString(KEY)
+	*pzAuthToken = C.sqlite3mprintf(cKey)
+	defer C.free(unsafe.Pointer(cKey))
+
 	return C.SQLITE_OK
 }
 
@@ -51,7 +54,14 @@ func Attach(vfsName string, storage string, account string, key string, containe
 	var pVfs *C.sqlite3_bcvfs
 	var zErr *C.char
 
-	rc := C.sqlite3_bcvfs_create(C.CString(cacheDir), C.CString(vfsName), &pVfs, &zErr)
+	cCacheDir := C.CString(cacheDir)
+	cVFSName := C.CString(vfsName)
+
+	rc := C.sqlite3_bcvfs_create(cCacheDir, cVFSName, &pVfs, &zErr)
+
+	defer C.free(unsafe.Pointer(cCacheDir))
+	defer C.free(unsafe.Pointer(cVFSName))
+
 	if rc == C.SQLITE_OK {
 		if C.sqlite3_bcvfs_isdaemon(pVfs) == 1 {
 			fmt.Println("virtual filesystem is using a daemon")
@@ -66,7 +76,16 @@ func Attach(vfsName string, storage string, account string, key string, containe
 	if rc == C.SQLITE_OK {
 		C.sqlite3_bcvfs_auth_callback(pVfs, nil, (*[0]byte)(unsafe.Pointer(C.csAuthCb)))
 
-		rc = C.sqlite3_bcvfs_attach(pVfs, C.CString(storage), C.CString(account), C.CString(containerName), nil, C.SQLITE_BCV_ATTACH_IFNOT, &zErr)
+		cStorage := C.CString(storage)
+		cAccount := C.CString(account)
+		cContainerName := C.CString(containerName)
+
+		rc = C.sqlite3_bcvfs_attach(pVfs, cStorage, cAccount, cContainerName, nil, C.SQLITE_BCV_ATTACH_IFNOT, &zErr)
+
+		defer C.free(unsafe.Pointer(cStorage))
+		defer C.free(unsafe.Pointer(cAccount))
+		defer C.free(unsafe.Pointer(cContainerName))
+
 		if rc != C.SQLITE_OK {
 			_ = removeCacheDir(cacheDir)
 			return nil, fmt.Errorf("unable to attach virtual filesystem with error: %s", C.GoString(zErr))
