@@ -2,6 +2,7 @@ package cloud_sqlite_vfs
 
 // #cgo LDFLAGS: -lpthread -ldl -lcurl -lssl -lcrypto
 // #cgo !darwin LDFLAGS: -Wl,--allow-multiple-definition
+// #cgo CFLAGS: -DSQLITE_ENABLE_RTREE=1
 // #include <stdlib.h>
 // #include "blockcachevfs.h"
 //
@@ -16,6 +17,11 @@ import (
 	"os"
 	"unsafe"
 )
+
+type VFS struct {
+	bcvfs    *C.sqlite3_bcvfs
+	cacheDir string
+}
 
 var KEY = ""
 
@@ -43,12 +49,13 @@ func createCacheDir(cacheDir string) error {
 	return nil
 }
 
-func Attach(vfsName string, storage string, account string, key string, containerName string, cacheDir string) (*C.sqlite3_bcvfs, error) {
+func NewVFS(vfsName string, storage string, account string, key string, containerName string, cacheDir string) (VFS, error) {
 	KEY = key
+	vfs := &VFS{}
 
 	err := createCacheDir(cacheDir)
 	if err != nil {
-		return nil, err
+		return *vfs, err
 	}
 
 	var pVfs *C.sqlite3_bcvfs
@@ -70,7 +77,7 @@ func Attach(vfsName string, storage string, account string, key string, containe
 		}
 	} else {
 		_ = removeCacheDir(cacheDir)
-		return nil, fmt.Errorf("unable to create virtual filesystem with error: %s", C.GoString(zErr))
+		return *vfs, fmt.Errorf("unable to create virtual filesystem with error: %s", C.GoString(zErr))
 	}
 
 	if rc == C.SQLITE_OK {
@@ -88,15 +95,17 @@ func Attach(vfsName string, storage string, account string, key string, containe
 
 		if rc != C.SQLITE_OK {
 			_ = removeCacheDir(cacheDir)
-			return nil, fmt.Errorf("unable to attach virtual filesystem with error: %s", C.GoString(zErr))
+			return *vfs, fmt.Errorf("unable to attach virtual filesystem with error: %s", C.GoString(zErr))
 		}
 	}
 
-	return pVfs, nil
+	vfs.bcvfs = pVfs
+	vfs.cacheDir = cacheDir
+
+	return *vfs, nil
 }
 
-func Detach(pVfs *C.sqlite3_bcvfs, cacheDir string) error {
-	C.sqlite3_bcvfs_destroy(pVfs)
-
-	return removeCacheDir(cacheDir)
+func (vfs VFS) Close() error {
+	C.sqlite3_bcvfs_destroy(vfs.bcvfs)
+	return removeCacheDir(vfs.cacheDir)
 }

@@ -43,7 +43,7 @@ const (
 )
 
 func main() {
-	vfs, err := cloud_sqlite_vfs.Attach(VFS_NAME, STORAGE, ACCOUNT, KEY, CONTAINER_NAME, CACHE_DIR)
+	vfs, err := cloud_sqlite_vfs.NewVFS(VFS_NAME, STORAGE, ACCOUNT, KEY, CONTAINER_NAME, CACHE_DIR)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -57,7 +57,7 @@ func main() {
 
 	fmt.Println(db)
 
-	err = cloud_sqlite_vfs.Detach(vfs, CACHE_DIR)
+	err = vfs.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
