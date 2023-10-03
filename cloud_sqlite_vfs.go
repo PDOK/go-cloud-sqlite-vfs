@@ -1,7 +1,7 @@
 package cloud_sqlite_vfs
 
 // #cgo LDFLAGS: -lpthread -ldl -lcurl -lssl -lcrypto
-// #cgo LDFLAGS: -Wl,--allow-multiple-definition
+// #cgo !darwin LDFLAGS: -Wl,--allow-multiple-definition
 // #cgo CFLAGS: -DSQLITE_ENABLE_RTREE=1
 // #include <stdlib.h>
 // #include "blockcachevfs.h"
