@@ -21,6 +21,9 @@ import (
 type VFS struct {
 	bcvfs    *C.sqlite3_bcvfs
 	cacheDir string
+
+	// true when running Cloud-Backed SQLite in daemonless mode, false when running as a daemon.
+	Daemonless bool
 }
 
 var KEY = ""
@@ -71,9 +74,9 @@ func NewVFS(vfsName string, storage string, account string, key string, containe
 
 	if rc == C.SQLITE_OK {
 		if C.sqlite3_bcvfs_isdaemon(pVfs) == 1 {
-			fmt.Println("virtual filesystem is using a daemon")
+			vfs.Daemonless = false
 		} else {
-			fmt.Println("virtual filesystem is in daemon less mode")
+			vfs.Daemonless = true
 		}
 	} else {
 		_ = removeCacheDir(cacheDir)

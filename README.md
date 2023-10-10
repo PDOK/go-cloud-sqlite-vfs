@@ -2,7 +2,7 @@
 
 # Description
 
-This project wraps the [Cloud Backed SQLite](https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki) (CSB)
+This project wraps the [Cloud Backed SQLite](https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki) (CBS)
 solution into a golang package. The project uses [The SQLite OS Interface or "VFS"](https://www.sqlite.org/vfs.html)
 concept to create a VFS which is backed by either Azure Blob Storage or Google Cloud Storage. The VFS can be used 
 with every SQLite golang package as long as it supports setting a custom VFS name.
@@ -18,7 +18,7 @@ This package can be installed with the `go get` command:
 go get github.com/PDOK/go-cloud-sqlite-vfs 
 ```
 
-**go-cloud-sqlite-vfs is cgo package**. If you want to build your app using go-cloud-sqlite-vfs , you need gcc.
+**go-cloud-sqlite-vfs is cgo package**. If you want to build your app using go-cloud-sqlite-vfs , you need a C-compiler like gcc.
 
 # Usage
 
