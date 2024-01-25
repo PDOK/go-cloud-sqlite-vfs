@@ -1,16 +1,16 @@
 # go-cloud-sqlite-vfs
 
-# Description
+## Description
 
 This project wraps the [Cloud Backed SQLite](https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki) (CBS)
-solution into a golang package. The project uses [The SQLite OS Interface or "VFS"](https://www.sqlite.org/vfs.html)
+solution into a Go package. The project uses [The SQLite OS Interface or "VFS"](https://www.sqlite.org/vfs.html)
 concept to create a VFS which is backed by either Azure Blob Storage or Google Cloud Storage. The VFS can be used 
-with every SQLite golang package as long as it supports setting a custom VFS name.
+with every SQLite Go package as long as it supports setting a custom VFS name.
 
 Below are some examples about how to use this package, for further information about the workings of this package
 please read the [documentation](https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki) of the CBS project.
 
-# Installation
+## Installation
 
 This package can be installed with the `go get` command:
 
@@ -18,9 +18,9 @@ This package can be installed with the `go get` command:
 go get github.com/PDOK/go-cloud-sqlite-vfs 
 ```
 
-**go-cloud-sqlite-vfs is cgo package**. If you want to build your app using go-cloud-sqlite-vfs , you need a C-compiler like gcc.
+**go-cloud-sqlite-vfs is cgo package**. If you want to build your app using go-cloud-sqlite-vfs, you need a C-compiler like gcc.
 
-# Usage
+## Usage
 
 ```go
 package main
@@ -64,9 +64,9 @@ func main() {
 }
 ```
 
-# Example project
+## Example project
 
-1. Build `blockcachevfsd` cli. For instuctions see the [CBS website](https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki)
+1. Build `blockcachevfsd` cli. For instructions see the [CBS website](https://sqlite.org/cloudsqlite/doc/trunk/www/index.wiki)
 2. Start Azurite
     ```bash
     docker run -p 10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0
@@ -89,7 +89,7 @@ func main() {
    go run ./
    ```
    
-# Dev
+## Dev
 
 Because the C code of the [CBS project](https://sqlite.org/cloudsqlite/dir?ci=tip) needs to be included in 
 the package it can be updated with the `download-c-code.sh` script located in the root of this project.
