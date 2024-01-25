@@ -18,6 +18,9 @@ import (
 	"unsafe"
 )
 
+var KEY = ""
+
+// VFS represent a SQLite virtual file systems backed by (Azure/Google) cloud object storage.
 type VFS struct {
 	bcvfs    *C.sqlite3_bcvfs
 	cacheDir string
@@ -25,8 +28,6 @@ type VFS struct {
 	// true when running Cloud-Backed SQLite in daemonless mode, false when running as a daemon.
 	Daemonless bool
 }
-
-var KEY = ""
 
 //export csAuthCb
 func csAuthCb(pCtx *C.void, zStorage *C.char, zAccount *C.char, zContainer *C.char, pzAuthToken **C.char) C.int {
@@ -43,16 +44,18 @@ func removeCacheDir(cacheDir string) error {
 
 func createCacheDir(cacheDir string) error {
 	if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
-		err := os.Mkdir(cacheDir, 0750)
+		err = os.Mkdir(cacheDir, 0750)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
-func NewVFS(vfsName string, storage string, account string, key string, containerName string, cacheDir string) (VFS, error) {
+// NewVFS build a new VFS. Note: when provided cacheSize is 0 the default CBS cache size of 1Gb will be used
+func NewVFS(vfsName string, storage string, account string, key string,
+	containerName string, cacheDir string, cacheSize int64, curlVerbose bool) (VFS, error) {
+
 	KEY = key
 	vfs := &VFS{}
 
@@ -72,39 +75,44 @@ func NewVFS(vfsName string, storage string, account string, key string, containe
 	defer C.free(unsafe.Pointer(cCacheDir))
 	defer C.free(unsafe.Pointer(cVFSName))
 
-	if rc == C.SQLITE_OK {
-		if C.sqlite3_bcvfs_isdaemon(pVfs) == 1 {
-			vfs.Daemonless = false
-		} else {
-			vfs.Daemonless = true
-		}
-	} else {
+	if rc != C.SQLITE_OK {
 		_ = removeCacheDir(cacheDir)
 		return *vfs, fmt.Errorf("unable to create virtual filesystem with error: %s", C.GoString(zErr))
 	}
 
-	if rc == C.SQLITE_OK {
-		C.sqlite3_bcvfs_auth_callback(pVfs, nil, (*[0]byte)(unsafe.Pointer(C.csAuthCb)))
+	if curlVerbose {
+		C.sqlite3_bcvfs_config(pVfs, C.SQLITE_BCV_CURLVERBOSE, 1)
+	}
+	if C.sqlite3_bcvfs_isdaemon(pVfs) == 1 {
+		vfs.Daemonless = false
+	} else {
+		vfs.Daemonless = true
 
-		cStorage := C.CString(storage)
-		cAccount := C.CString(account)
-		cContainerName := C.CString(containerName)
-
-		rc = C.sqlite3_bcvfs_attach(pVfs, cStorage, cAccount, cContainerName, nil, C.SQLITE_BCV_ATTACH_IFNOT, &zErr)
-
-		defer C.free(unsafe.Pointer(cStorage))
-		defer C.free(unsafe.Pointer(cAccount))
-		defer C.free(unsafe.Pointer(cContainerName))
-
-		if rc != C.SQLITE_OK {
-			_ = removeCacheDir(cacheDir)
-			return *vfs, fmt.Errorf("unable to attach virtual filesystem with error: %s", C.GoString(zErr))
+		if cacheSize > 0 {
+			// cache only works in daemonless mode
+			C.sqlite3_bcvfs_config(pVfs, C.SQLITE_BCV_CACHESIZE, C.longlong(cacheSize))
 		}
+	}
+
+	C.sqlite3_bcvfs_auth_callback(pVfs, nil, (*[0]byte)(unsafe.Pointer(C.csAuthCb)))
+
+	cStorage := C.CString(storage)
+	cAccount := C.CString(account)
+	cContainerName := C.CString(containerName)
+
+	rc = C.sqlite3_bcvfs_attach(pVfs, cStorage, cAccount, cContainerName, nil, C.SQLITE_BCV_ATTACH_IFNOT, &zErr)
+
+	defer C.free(unsafe.Pointer(cStorage))
+	defer C.free(unsafe.Pointer(cAccount))
+	defer C.free(unsafe.Pointer(cContainerName))
+
+	if rc != C.SQLITE_OK {
+		_ = removeCacheDir(cacheDir)
+		return *vfs, fmt.Errorf("unable to attach virtual filesystem with error: %s", C.GoString(zErr))
 	}
 
 	vfs.bcvfs = pVfs
 	vfs.cacheDir = cacheDir
-
 	return *vfs, nil
 }
 

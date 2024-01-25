@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/PDOK/go-cloud-sqlite-vfs"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -23,7 +24,7 @@ type Genre struct {
 }
 
 func main() {
-	vfs, err := cloud_sqlite_vfs.NewVFS(VFS_NAME, STORAGE, ACCOUNT, KEY, CONTAINER_NAME, CACHE_DIR)
+	vfs, err := cloud_sqlite_vfs.NewVFS(VFS_NAME, STORAGE, ACCOUNT, KEY, CONTAINER_NAME, CACHE_DIR, 0, false)
 	if err != nil {
 		fmt.Println(err)
 		return
