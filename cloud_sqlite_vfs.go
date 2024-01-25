@@ -18,13 +18,6 @@ import (
 	"unsafe"
 )
 
-const (
-	// Argument sets the maximum size of the cachefile in bytes. This option is only available for daemonless mode VFSs.
-	sqliteBcvCacheSize = 1
-	// The argument enables (non-zero) or disables (zero) verbose libcurl logging.
-	sqliteBcvCurlVerbose = 4
-)
-
 var KEY = ""
 
 // VFS represent a SQLite virtual file systems backed by (Azure/Google) cloud object storage.
@@ -88,7 +81,7 @@ func NewVFS(vfsName string, storage string, account string, key string,
 	}
 
 	if curlVerbose {
-		C.sqlite3_bcvfs_config(pVfs, sqliteBcvCurlVerbose, 1)
+		C.sqlite3_bcvfs_config(pVfs, C.SQLITE_BCV_CURLVERBOSE, 1)
 	}
 	if C.sqlite3_bcvfs_isdaemon(pVfs) == 1 {
 		vfs.Daemonless = false
@@ -97,7 +90,7 @@ func NewVFS(vfsName string, storage string, account string, key string,
 
 		if cacheSize > 0 {
 			// cache only works in daemonless mode
-			C.sqlite3_bcvfs_config(pVfs, sqliteBcvCacheSize, C.longlong(cacheSize))
+			C.sqlite3_bcvfs_config(pVfs, C.SQLITE_BCV_CACHESIZE, C.longlong(cacheSize))
 		}
 	}
 
