@@ -1,8 +1,8 @@
 package cloud_sqlite_vfs
 
 // #cgo LDFLAGS: -lpthread -ldl -lcurl -lssl -lcrypto
-// #cgo !darwin LDFLAGS: -Wl,--allow-multiple-definition
 // #cgo CFLAGS: -DSQLITE_ENABLE_RTREE=1
+// #cgo !darwin LDFLAGS: -Wl,--allow-multiple-definition
 // #include <stdlib.h>
 // #include "blockcachevfs.h"
 //
@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"os"
 	"unsafe"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var KEY = ""
