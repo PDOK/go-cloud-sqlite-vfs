@@ -28,4 +28,3 @@ rm -rf ./cloudsqlite-${CBS_VERSION}
 
 # Make sure sqlite amalgamation is not present, use the one shipped with mattn/go-sqlite.
 rm -rf ./sqlite3.c
-rm -rf ./sqlite3.h
